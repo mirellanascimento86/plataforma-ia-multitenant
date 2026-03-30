@@ -1,86 +1,149 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { MessageSquare, Users, Bot, TrendingUp } from 'lucide-react'
 
 export default function DashboardPage() {
-  const [stats, setStats] = useState({
-    conversas: 0,
-    robos: 0,
-    clientes: 0,
-  })
+  const router = useRouter()
+  const [user, setUser] = useState<any>(null)
+  const [empresa, setEmpresa] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    loadStats()
+    loadUserData()
   }, [])
 
-  async function loadStats() {
-    const { data: userData } = await supabase.auth.getUser()
-    if (!userData.user) return
+  async function loadUserData() {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session) {
+        router.push('/login')
+        return
+      }
 
-    const { data: usuario } = await supabase
-      .from('usuarios')
-      .select('empresa_id')
-      .eq('id', userData.user.id)
-      .single()
+      const { data: userData } = await supabase
+        .from('usuarios')
+        .select('*, empresas(*)')
+        .eq('id', session.user.id)
+        .single()
 
-    const empresaId = usuario?.empresa_id
+      if (!userData) {
+        router.push('/login')
+        return
+      }
 
-    const [conversas, robos] = await Promise.all([
-      supabase.from('conversas').select('*', { count: 'exact' }).eq('empresa_id', empresaId),
-      supabase.from('robos').select('*', { count: 'exact' }).eq('empresa_id', empresaId),
-    ])
+      setUser(userData)
+      setEmpresa(userData.empresas)
+    } catch (error) {
+      console.error('Erro:', error)
+      router.push('/login')
+    } finally {
+      setLoading(false)
+    }
+  }
 
-    setStats({
-      conversas: conversas.count || 0,
-      robos: robos.count || 0,
-      clientes: 0,
-    })
+  async function handleLogout() {
+    await supabase.auth.signOut()
+    router.push('/login')
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-xl shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-3xl font-bold text-gray-900">{stats.conversas}</p>
-              <p className="text-gray-500">Conversas</p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <h1 className="text-xl font-bold text-blue-600">
+                {empresa?.nome || 'Minha Empresa'}
+              </h1>
             </div>
-            <MessageSquare className="w-10 h-10 text-blue-200" />
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-600">Olá, {user?.nome}</span>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 text-sm font-medium"
+              >
+                Sair
+              </button>
+            </div>
           </div>
         </div>
+      </header>
 
-        <div className="bg-white p-6 rounded-xl shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-3xl font-bold text-gray-900">{stats.robos}</p>
-              <p className="text-gray-500">Robôs Ativos</p>
+      {/* Conteúdo */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">Dashboard</h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Card Robôs */}
+          <a href="/robos" className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-100">
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+              <span className="text-2xl">🤖</span>
             </div>
-            <Bot className="w-10 h-10 text-green-200" />
-          </div>
-        </div>
+            <h3 className="font-semibold text-lg text-gray-900">Meus Robôs</h3>
+            <p className="text-gray-500 text-sm mt-1">Gerenciar assistentes virtuais</p>
+          </a>
 
-        <div className="bg-white p-6 rounded-xl shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-3xl font-bold text-gray-900">{stats.clientes}</p>
-              <p className="text-gray-500">Clientes</p>
+          {/* Card Conversas */}
+          <a href="/conversas" className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-100">
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+              <span className="text-2xl">💬</span>
             </div>
-            <Users className="w-10 h-10 text-purple-200" />
-          </div>
-        </div>
-      </div>
+            <h3 className="font-semibold text-lg text-gray-900">Conversas</h3>
+            <p className="text-gray-500 text-sm mt-1">Atender clientes</p>
+          </a>
 
-      <div className="bg-white p-6 rounded-xl shadow-sm">
-        <h2 className="text-lg font-semibold mb-4">Bem-vindo à sua plataforma!</h2>
-        <p className="text-gray-600">
-          Comece conectando seu WhatsApp e treinando seu robô para atender seus clientes automaticamente.
-        </p>
-      </div>
+          {/* Card WhatsApp */}
+          <a href="/whatsapp" className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-100">
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+              <span className="text-2xl">📱</span>
+            </div>
+            <h3 className="font-semibold text-lg text-gray-900">WhatsApp</h3>
+            <p className="text-gray-500 text-sm mt-1">Conectar número</p>
+          </a>
+
+          {/* Card Agendamentos */}
+          <a href="/agendamentos" className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-100">
+            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+              <span className="text-2xl">📅</span>
+            </div>
+            <h3 className="font-semibold text-lg text-gray-900">Agendamentos</h3>
+            <p className="text-gray-500 text-sm mt-1">Calendário de compromissos</p>
+          </a>
+
+          {/* Card Clientes */}
+          <a href="/clientes" className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-100">
+            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+              <span className="text-2xl">👥</span>
+            </div>
+            <h3 className="font-semibold text-lg text-gray-900">Clientes</h3>
+            <p className="text-gray-500 text-sm mt-1">Base de contatos</p>
+          </a>
+
+          {/* Card Planilhas */}
+          <a href="/planilhas" className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-100">
+            <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-4">
+              <span className="text-2xl">📊</span>
+            </div>
+            <h3 className="font-semibold text-lg text-gray-900">Planilhas</h3>
+            <p className="text-gray-500 text-sm mt-1">Exportar relatórios</p>
+          </a>
+        </div>
+      </main>
     </div>
   )
 }
