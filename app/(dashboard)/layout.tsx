@@ -12,6 +12,17 @@ const menuItems = [
   { href: '/robos', label: 'Meus Robôs', icon: Bot },
 ]
 
+const menuItems = [
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/conversas', label: 'Conversas', icon: MessageSquare },
+  { href: '/robos', label: 'Meus Robôs', icon: Bot },
+  { href: '/agendamentos', label: 'Agendamentos', icon: Calendar },
+  { href: '/clientes', label: 'Clientes', icon: Users },
+  { href: '/planilhas', label: 'Planilhas', icon: FileSpreadsheet },
+  { href: '/whatsapp', label: 'WhatsApp', icon: Phone },
+  { href: '/configuracoes', label: 'Configurações', icon: Settings },
+]
+
 export default function DashboardLayout({
   children,
 }: {
