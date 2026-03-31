@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 
@@ -8,7 +8,8 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 const supabase = createClient(supabaseUrl, supabaseKey)
 
-export default function TreinamentoPage() {
+// Componente que usa useSearchParams
+function TreinamentoContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const roboId = searchParams.get('robo')
@@ -122,7 +123,6 @@ export default function TreinamentoPage() {
         </div>
       </main>
 
-      {/* Modal */}
       {modalAberto && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white p-6 rounded-xl max-w-md w-full">
@@ -146,7 +146,7 @@ export default function TreinamentoPage() {
                   onChange={(e) => setNovaIntencao({...novaIntencao, resposta: e.target.value})}
                   className="w-full px-3 py-2 border rounded-lg"
                   rows={3}
-                  placeholder="Digite a resposta que o robô deve dar..."
+                  placeholder="Digite a resposta..."
                   required
                 />
               </div>
@@ -170,5 +170,18 @@ export default function TreinamentoPage() {
         </div>
       )}
     </div>
+  )
+}
+
+// Componente principal com Suspense
+export default function TreinamentoPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    }>
+      <TreinamentoContent />
+    </Suspense>
   )
 }
