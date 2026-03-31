@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@supabase/supabase-js'
 
-// Cliente Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 const supabase = createClient(supabaseUrl, supabaseKey)
@@ -16,16 +15,14 @@ export default function CadastroPage() {
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState('')
 
-  // Dados
   const [nomeEmpresa, setNomeEmpresa] = useState('')
   const [email, setEmail] = useState('')
   const [telefoneEmpresa, setTelefoneEmpresa] = useState('')
   const [nomeAdmin, setNomeAdmin] = useState('')
   const [senha, setSenha] = useState('')
 
-  // Gerar slug único com timestamp + random (garantido único)
   function gerarSlugUnico(nome: string): string {
-    const timestamp = Date.now().toString(36) // Base36 do timestamp atual
+    const timestamp = Date.now().toString(36)
     const random = Math.random().toString(36).substring(2, 8)
     const base = nome
       .toLowerCase()
@@ -44,48 +41,26 @@ export default function CadastroPage() {
     setErro('')
 
     try {
-      console.log('=== INICIANDO CADASTRO ===')
-      
-      // 1. Gerar slug ÚNICO (timestamp garante unicidade)
       const slug = gerarSlugUnico(nomeEmpresa)
-      console.log('Slug gerado:', slug)
 
-      // 2. Criar usuário no Auth PRIMEIRO
-      console.log('Criando usuário no Auth...')
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password: senha,
-        options: {
-          data: {
-            nome: nomeAdmin,
-            nome_empresa: nomeEmpresa
-          }
-        }
       })
 
       if (authError) {
-        console.error('Erro Auth:', authError)
-        if (authError.message.includes('already registered')) {
-          throw new Error('Este email já está cadastrado. Use outro email ou faça login.')
-        }
-        throw new Error('Erro ao criar conta: ' + authError.message)
+        throw new Error('Email já cadastrado ou senha inválida')
       }
 
       if (!authData.user) {
-        throw new Error('Erro ao criar usuário - sem retorno')
+        throw new Error('Erro ao criar usuário')
       }
 
-      console.log('✓ Usuário Auth criado:', authData.user.id)
-
-      // 3. Criar empresa com delay pequeno para garantir ordem
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
-      console.log('Criando empresa...')
       const { data: empresaData, error: empresaError } = await supabase
         .from('empresas')
         .insert({
           nome: nomeEmpresa,
-          slug: slug, // GARANTIDO ÚNICO pelo timestamp
+          slug: slug,
           email: email,
           telefone: telefoneEmpresa || null,
           ativa: true,
@@ -95,90 +70,31 @@ export default function CadastroPage() {
         .single()
 
       if (empresaError) {
-        console.error('Erro Empresa:', empresaError)
-        // Se falhar, tentar com novo slug
-        if (empresaError.code === '23505') {
-          console.log('Slug duplicado detectado, tentando com novo slug...')
-          const novoSlug = gerarSlugUnico(nomeEmpresa + '-retry')
-          
-          const { data: retryData, error: retryError } = await supabase
-            .from('empresas')
-            .insert({
-              nome: nomeEmpresa,
-              slug: novoSlug,
-              email: email,
-              telefone: telefoneEmpresa || null,
-              ativa: true,
-              plano: 'gratuito'
-            })
-            .select()
-            .single()
-            
-          if (retryError) throw new Error('Erro ao criar empresa após retry: ' + retryError.message)
-          
-          // Continuar com retryData
-          await criarUsuarioERobo(authData.user.id, retryData.id)
-          console.log('✓ Empresa criada (retry):', retryData.id)
-          router.push('/')
-          return
-        }
         throw new Error('Erro ao criar empresa: ' + empresaError.message)
       }
 
-      console.log('✓ Empresa criada:', empresaData.id)
+      await supabase.from('usuarios').insert({
+        id: authData.user.id,
+        empresa_id: empresaData.id,
+        email: email,
+        nome: nomeAdmin,
+        cargo: 'admin_empresa',
+        ativo: true
+      })
 
-      // 4. Criar usuário e robô
-      await criarUsuarioERobo(authData.user.id, empresaData.id)
+      await supabase.from('robos').insert({
+        empresa_id: empresaData.id,
+        nome: 'Assistente Virtual',
+        descricao: 'Robô de atendimento automático',
+        ativo: true
+      })
 
-      console.log('=== CADASTRO COMPLETO ===')
-      
-      // 5. Redirecionar para dashboard (pasta /(dashboard) = URL /)
       router.push('/')
       
     } catch (error: any) {
-      console.error('ERRO COMPLETO:', error)
-      setErro(error.message || 'Erro ao criar conta. Tente novamente.')
+      setErro(error.message || 'Erro ao criar conta')
     } finally {
       setLoading(false)
-    }
-  }
-
-  // Função auxiliar para criar usuário e robô
-  async function criarUsuarioERobo(userId: string, empresaId: string) {
-    // Criar usuário
-    console.log('Criando usuário na tabela...')
-    const { error: userError } = await supabase.from('usuarios').insert({
-      id: userId,
-      empresa_id: empresaId,
-      email: email,
-      nome: nomeAdmin,
-      cargo: 'admin_empresa',
-      ativo: true
-    })
-
-    if (userError) {
-      console.error('Erro ao criar usuário:', userError)
-      throw new Error('Erro ao vincular usuário')
-    }
-    console.log('✓ Usuário criado')
-
-    // Criar robô padrão
-    console.log('Criando robô...')
-    const { error: roboError } = await supabase.from('robos').insert({
-      empresa_id: empresaId,
-      nome: 'Assistente Virtual',
-      descricao: 'Robô de atendimento automático',
-      ativo: true,
-      personalidade: 'profissional',
-      saudacao: 'Olá! Sou o assistente virtual. Como posso ajudar você hoje?',
-      instrucoes_sistema: 'Você é um assistente de atendimento ao cliente. Seja educado, profissional e objetivo.'
-    })
-
-    if (roboError) {
-      console.error('Erro ao criar robô:', roboError)
-      // Não falha o cadastro se robô der erro
-    } else {
-      console.log('✓ Robô criado')
     }
   }
 
@@ -196,140 +112,118 @@ export default function CadastroPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="w-full max-w-md">
-        
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <span className="text-3xl font-bold text-white">IA</span>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">Criar sua conta</h1>
-          <p className="text-gray-500 mt-2">Plataforma de atendimento inteligente</p>
+    <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
+      <div className="text-center mb-8">
+        <div className="w-16 h-16 bg-green-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <span className="text-2xl font-bold text-white">+</span>
         </div>
+        <h1 className="text-2xl font-bold text-gray-900">Criar conta</h1>
+        <p className="text-gray-500 mt-2">Comece a usar a plataforma</p>
+      </div>
 
-        {/* Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+      {erro && (
+        <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">
+          {erro}
+        </div>
+      )}
+
+      {etapa === 1 ? (
+        <div className="space-y-4">
+          <h2 className="font-semibold text-lg">Dados da Empresa</h2>
           
-          {/* Progresso */}
-          <div className="flex items-center mb-8">
-            <div className={`flex-1 h-2 rounded-full ${etapa >= 1 ? 'bg-blue-600' : 'bg-gray-200'}`} />
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mx-2 ${etapa >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>1</div>
-            <div className={`flex-1 h-2 rounded-full ${etapa >= 2 ? 'bg-blue-600' : 'bg-gray-200'}`} />
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mx-2 ${etapa >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>2</div>
-            <div className="flex-1 h-2 rounded-full bg-gray-200" />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Nome da Empresa</label>
+            <input
+              type="text"
+              value={nomeEmpresa}
+              onChange={(e) => setNomeEmpresa(e.target.value)}
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              placeholder="Ex: Barbearia do João"
+            />
           </div>
 
-          {/* Erro */}
-          {erro && (
-            <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg">
-              <p className="text-red-700 text-sm">{erro}</p>
-            </div>
-          )}
-
-          {/* Etapa 1 */}
-          {etapa === 1 ? (
-            <div className="space-y-5">
-              <h2 className="text-lg font-semibold text-gray-900">Dados da Empresa</h2>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Nome da Empresa *</label>
-                <input
-                  type="text"
-                  value={nomeEmpresa}
-                  onChange={(e) => setNomeEmpresa(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                  placeholder="Ex: Barbearia do João"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                  placeholder="contato@empresa.com"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Telefone</label>
-                <input
-                  type="tel"
-                  value={telefoneEmpresa}
-                  onChange={(e) => setTelefoneEmpresa(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                  placeholder="(11) 99999-9999"
-                />
-              </div>
-
-              <button
-                onClick={avancarEtapa}
-                className="w-full py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium transition-colors flex items-center justify-center"
-              >
-                Continuar →
-              </button>
-            </div>
-          ) : (
-            /* Etapa 2 */
-            <form onSubmit={handleCadastro} className="space-y-5">
-              <h2 className="text-lg font-semibold text-gray-900">Dados do Administrador</h2>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Seu Nome *</label>
-                <input
-                  type="text"
-                  value={nomeAdmin}
-                  onChange={(e) => setNomeAdmin(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                  placeholder="João Silva"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Senha *</label>
-                <input
-                  type="password"
-                  value={senha}
-                  onChange={(e) => setSenha(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                  placeholder="Mínimo 6 caracteres"
-                  minLength={6}
-                  required
-                />
-              </div>
-
-              <div className="flex space-x-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setEtapa(1)}
-                  className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-medium transition-colors"
-                >
-                  ← Voltar
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-50 font-medium transition-colors"
-                >
-                  {loading ? '⏳ Criando...' : '✓ Criar Conta'}
-                </button>
-              </div>
-            </form>
-          )}
-
-          <div className="mt-6 text-center text-sm text-gray-500">
-            Já tem conta?{' '}
-            <Link href="/login" className="text-blue-600 hover:underline font-medium">
-              Fazer login
-            </Link>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              placeholder="contato@empresa.com"
+            />
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
+            <input
+              type="tel"
+              value={telefoneEmpresa}
+              onChange={(e) => setTelefoneEmpresa(e.target.value)}
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              placeholder="(11) 99999-9999"
+            />
+          </div>
+
+          <button
+            onClick={avancarEtapa}
+            className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+          >
+            Continuar →
+          </button>
         </div>
+      ) : (
+        <form onSubmit={handleCadastro} className="space-y-4">
+          <h2 className="font-semibold text-lg">Dados do Administrador</h2>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Seu Nome</label>
+            <input
+              type="text"
+              value={nomeAdmin}
+              onChange={(e) => setNomeAdmin(e.target.value)}
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              placeholder="João Silva"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+            <input
+              type="password"
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              placeholder="Mínimo 6 caracteres"
+              minLength={6}
+              required
+            />
+          </div>
+
+          <div className="flex space-x-3">
+            <button
+              type="button"
+              onClick={() => setEtapa(1)}
+              className="flex-1 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+            >
+              ← Voltar
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+            >
+              {loading ? 'Criando...' : 'Criar Conta'}
+            </button>
+          </div>
+        </form>
+      )}
+
+      <div className="mt-6 text-center text-sm text-gray-500">
+        Já tem conta?{' '}
+        <Link href="/login" className="text-blue-600 hover:underline font-medium">
+          Fazer login
+        </Link>
       </div>
     </div>
   )
