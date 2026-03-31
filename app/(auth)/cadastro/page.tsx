@@ -1,4 +1,3 @@
-// app/(auth)/cadastro/page.tsx
 'use client';
 
 import { useState } from 'react';
@@ -23,14 +22,14 @@ export default function CadastroPage() {
     const nomeEmpresa = formData.get('nome_empresa') as string;
 
     try {
-      // 1. Criar usuário no Auth (o trigger cria empresa e vínculo automaticamente!)
+      // 🎯 SÓ ISSO! O trigger faz o resto automaticamente:
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             nome: nome,
-            nome_empresa: nomeEmpresa, // Passa para o trigger
+            nome_empresa: nomeEmpresa, // ← O trigger usa isso!
           },
         },
       });
@@ -38,32 +37,32 @@ export default function CadastroPage() {
       if (signUpError) throw signUpError;
 
       if (data.user) {
-        // 2. Redirecionar para dashboard (já está logado)
+        // 🎉 Deu certo! Vai pro dashboard:
         router.push('/dashboard');
         router.refresh();
       }
     } catch (err: any) {
-      console.error('Erro no cadastro:', err);
-      setError(err.message || 'Erro ao criar conta. Tente novamente.');
+      console.error('Erro:', err);
+      setError(err.message || 'Erro ao criar conta');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-6">Criar sua conta</h1>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+        <h1 className="text-2xl font-bold mb-6 text-center">Criar sua conta 🚀</h1>
         
         {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded mb-4 text-sm">
-            {error}
+          <div className="bg-red-100 text-red-600 p-3 rounded mb-4 text-sm">
+            ❌ {error}
           </div>
         )}
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Nome completo</label>
+            <label className="block text-sm font-medium mb-1">Seu nome</label>
             <input 
               name="nome" 
               type="text" 
@@ -74,13 +73,13 @@ export default function CadastroPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Nome da empresa</label>
+            <label className="block text-sm font-medium mb-1">Nome da sua empresa</label>
             <input 
               name="nome_empresa" 
               type="text" 
               required 
               className="w-full px-3 py-2 border rounded-lg"
-              placeholder="Minha Empresa LTDA"
+              placeholder="Minha Empresa"
             />
           </div>
 
@@ -96,7 +95,7 @@ export default function CadastroPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Senha</label>
+            <label className="block text-sm font-medium mb-1">Senha (mínimo 6 caracteres)</label>
             <input 
               name="password" 
               type="password" 
@@ -110,9 +109,9 @@ export default function CadastroPage() {
           <button 
             type="submit" 
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            className="w-full bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 disabled:opacity-50 font-bold"
           >
-            {loading ? 'Criando conta...' : 'Criar conta gratuita'}
+            {loading ? 'Criando...' : 'Criar conta GRÁTIS'}
           </button>
         </div>
       </form>
