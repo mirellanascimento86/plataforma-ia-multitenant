@@ -3,14 +3,16 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
-import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+const supabase = createClient(supabaseUrl, supabaseKey)
 
 export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
-  const [mostrarSenha, setMostrarSenha] = useState(false)
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState('')
 
@@ -30,17 +32,17 @@ export default function LoginPage() {
       return
     }
 
-    router.push('/dashboard')
+    router.push('/')
   }
 
   return (
-    <div className="bg-white p-8 rounded-2xl shadow-lg">
+    <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
       <div className="text-center mb-8">
         <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
           <span className="text-2xl font-bold text-white">IA</span>
         </div>
         <h1 className="text-2xl font-bold text-gray-900">Bem-vindo de volta</h1>
-        <p className="text-gray-500 mt-2">Entre na sua conta para continuar</p>
+        <p className="text-gray-500 mt-2">Entre na sua conta</p>
       </div>
 
       {erro && (
@@ -64,23 +66,14 @@ export default function LoginPage() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
-          <div className="relative">
-            <input
-              type={mostrarSenha ? 'text' : 'password'}
-              value={senha}
-              onChange={(e) => setSenha(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-              placeholder="••••••••"
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setMostrarSenha(!mostrarSenha)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-            >
-              {mostrarSenha ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-            </button>
-          </div>
+          <input
+            type="password"
+            value={senha}
+            onChange={(e) => setSenha(e.target.value)}
+            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            placeholder="••••••••"
+            required
+          />
         </div>
 
         <button
@@ -93,7 +86,7 @@ export default function LoginPage() {
       </form>
 
       <div className="mt-6 text-center text-sm text-gray-500">
-        Não tem uma conta?{' '}
+        Não tem conta?{' '}
         <Link href="/cadastro" className="text-blue-600 hover:underline font-medium">
           Criar conta
         </Link>
