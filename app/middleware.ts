@@ -16,7 +16,9 @@ export async function middleware(request: NextRequest) {
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
+            // Atualiza o cookie na request
             request.cookies.set(name, value)
+            // Cria uma nova response com o cookie atualizado
             response = NextResponse.next({
               request,
             })
@@ -27,13 +29,13 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // Atualiza a sessão (refresh automático)
+  // Refresh da sessão (importante para manter o usuário logado)
   await supabase.auth.getSession()
 
   return response
 }
 
-// Protege todas as rotas exceto login e cadastro
+// Aplica o middleware em todas as páginas, exceto login, cadastro e arquivos estáticos
 export const config = {
   matcher: [
     '/((?!login|cadastro|api|_next/static|_next/image|favicon.ico).*)',
