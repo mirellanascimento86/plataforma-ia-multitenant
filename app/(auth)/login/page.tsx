@@ -19,10 +19,10 @@ export default function Login() {
     const email = formData.get('email') as string
     const password = formData.get('password') as string
 
-    const { error: loginError } = await supabase.auth.signInWithPassword({ email, password })
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
 
-    if (loginError) {
-      setError(loginError.message)
+    if (error) {
+      setError(error.message)
     } else {
       document.documentElement.classList.add('thunder-shake')
       setTimeout(() => router.push('/'), 800)
@@ -31,30 +31,33 @@ export default function Login() {
   }
 
   return (
-    <div className="max-w-md w-full bg-zinc-900 border border-yellow-400 rounded-3xl p-8 shadow-2xl">
-      <div className="flex items-center justify-center gap-2 mb-8">
-        <span className="text-5xl">⚡</span>
-        <h1 className="text-4xl font-bold tracking-tighter text-yellow-300">Thunder AI</h1>
+    <div className="thunder-bg min-h-screen flex items-center justify-center p-6">
+      <div className="max-w-md w-full bg-zinc-900 border border-yellow-400 rounded-3xl p-10 shadow-2xl">
+        <div className="flex justify-center mb-8">
+          <span className="text-6xl">⚡</span>
+        </div>
+        <h1 className="text-5xl font-black text-center text-yellow-300 tracking-tighter">THUNDER AI</h1>
+        <p className="text-center text-blue-300 mt-2">Entre no poder do trovão</p>
+
+        <form onSubmit={handleSubmit} className="mt-10 space-y-6">
+          <input name="email" type="email" placeholder="Email" required className="w-full bg-black border border-yellow-400 px-5 py-4 rounded-2xl text-white" />
+          <input name="password" type="password" placeholder="Senha" required className="w-full bg-black border border-yellow-400 px-5 py-4 rounded-2xl text-white" />
+
+          {error && <p className="text-red-400 text-center">{error}</p>}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-yellow-300 via-blue-400 to-yellow-300 text-black font-bold py-5 rounded-2xl text-xl hover:scale-105 transition-all"
+          >
+            {loading ? "⚡ ENTRANDO..." : "ENTRAR NO TROVÃO ⚡"}
+          </button>
+        </form>
+
+        <p className="text-center mt-8 text-zinc-400">
+          Não tem conta? <a href="/cadastro" className="text-yellow-300 underline">Cadastre-se aqui</a>
+        </p>
       </div>
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <input name="email" type="email" placeholder="Email" required className="w-full bg-black border border-yellow-400 text-white px-4 py-3 rounded-xl" />
-        <input name="password" type="password" placeholder="Senha" required className="w-full bg-black border border-yellow-400 text-white px-4 py-3 rounded-xl" />
-
-        {error && <p className="text-red-400 text-sm">{error}</p>}
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-gradient-to-r from-yellow-400 to-blue-400 text-black font-bold py-4 rounded-2xl hover:scale-105 transition-all"
-        >
-          {loading ? '⚡ Entrando...' : 'ENTRAR NO TROVÃO ⚡'}
-        </button>
-      </form>
-
-      <p className="text-center text-zinc-400 mt-6 text-sm">
-        Não tem conta? <a href="/cadastro" className="text-yellow-300">Cadastre-se</a>
-      </p>
     </div>
   )
 }

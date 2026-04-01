@@ -2,37 +2,42 @@
 
 import { useEffect } from 'react'
 
-export default function Dashboard() {
+export default function Home() {
   useEffect(() => {
-    document.documentElement.classList.add('thunder-shake')
-    setTimeout(() => {
-      document.documentElement.classList.remove('thunder-shake')
-    }, 1200)
+    const shake = () => {
+      document.documentElement.classList.add('thunder-shake')
+      setTimeout(() => document.documentElement.classList.remove('thunder-shake'), 1200)
+    }
+    shake()
   }, [])
 
   return (
-    <div className="thunder-bg min-h-screen p-8">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-6xl font-black tracking-tighter text-yellow-300 flex items-center gap-4">
-          ⚡ Thunder AI Corporation
-        </h1>
-        <p className="text-blue-300 text-2xl mt-2">Seu robô WhatsApp já está tremendo de poder</p>
+    <div className="thunder-bg min-h-screen p-10">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex items-center gap-4">
+          <span className="text-7xl">⚡</span>
+          <div>
+            <h1 className="text-7xl font-black tracking-tighter text-yellow-300">THUNDER AI CORPORATION</h1>
+            <p className="text-3xl text-blue-300">Robôs WhatsApp com IA que tremem como trovão</p>
+          </div>
+        </div>
 
-        {/* Menu deslizante premium */}
-        <div className="mt-12 grid grid-cols-4 gap-6">
-          <a href="/conversas" className="bg-zinc-900 border border-yellow-400 hover:border-blue-400 rounded-3xl p-8 hover:scale-105 transition-all">
-            <h2 className="text-2xl font-bold">Conversas</h2>
-            <p className="text-zinc-400">Intervenha ao vivo</p>
-          </a>
-          <a href="/robos" className="bg-zinc-900 border border-yellow-400 hover:border-blue-400 rounded-3xl p-8 hover:scale-105 transition-all">
-            <h2 className="text-2xl font-bold">Meus Robôs</h2>
-          </a>
-          <a href="/agendamentos" className="bg-zinc-900 border border-yellow-400 hover:border-blue-400 rounded-3xl p-8 hover:scale-105 transition-all">
-            <h2 className="text-2xl font-bold">Calendário</h2>
-          </a>
-          <a href="/clientes" className="bg-zinc-900 border border-yellow-400 hover:border-blue-400 rounded-3xl p-8 hover:scale-105 transition-all">
-            <h2 className="text-2xl font-bold">Clientes</h2>
-          </a>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-16">
+          {[
+            { title: "Conversas", link: "/conversas", desc: "Intervenha ao vivo" },
+            { title: "Meus Robôs", link: "/robos", desc: "Crie e treine" },
+            { title: "Agendamentos", link: "/agendamentos", desc: "Calendário inteligente" },
+            { title: "Clientes", link: "/clientes", desc: "Dados e planilhas" }
+          ].map((item) => (
+            <a
+              key={item.title}
+              href={item.link}
+              className="bg-zinc-900 border border-yellow-400 hover:border-blue-400 p-8 rounded-3xl hover:scale-105 transition-all group"
+            >
+              <h2 className="text-3xl font-bold text-yellow-300 group-hover:text-white">{item.title}</h2>
+              <p className="text-zinc-400 mt-3">{item.desc}</p>
+            </a>
+          ))}
         </div>
       </div>
     </div>
