@@ -22,9 +22,7 @@ export default function Cadastro() {
     const password = formData.get('password') as string
 
     const { data, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { nome, empresa } }
+      email, password, options: { data: { nome, empresa } }
     })
 
     if (authError) {
@@ -33,43 +31,37 @@ export default function Cadastro() {
       return
     }
 
-    const { error: profileError } = await supabase.from('usuarios').insert({
-      id: data.user!.id,
-      nome,
-      empresa
-    })
+    await supabase.from('usuarios').insert({ id: data.user!.id, nome, empresa })
 
-    if (profileError) {
-      setError('Erro ao salvar perfil')
-    } else {
-      document.documentElement.classList.add('thunder-shake')
-      setTimeout(() => router.push('/'), 800)
-    }
+    document.documentElement.classList.add('thunder-shake')
+    setTimeout(() => router.push('/'), 800)
     setLoading(false)
   }
 
   return (
-    <div className="thunder-bg min-h-screen flex items-center justify-center p-6">
-      <div className="max-w-md w-full bg-zinc-900 border border-yellow-400 rounded-3xl p-10">
-        <div className="text-center mb-8">
-          <div className="text-6xl mb-4">⚡</div>
-          <h1 className="text-5xl font-black text-yellow-300">THUNDER AI</h1>
+    <div className="thunder-bg min-h-screen flex items-center justify-center p-8">
+      <div className="max-w-md w-full bg-zinc-900 border border-amber-400 rounded-3xl p-12 shadow-2xl">
+        <div className="text-center mb-10">
+          <h1 className="text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-blue-400">
+            THUNDER AI
+          </h1>
+          <p className="text-amber-300 text-xl mt-2">Corporation</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <input name="nome" placeholder="Seu nome" required className="w-full bg-black border border-yellow-400 px-5 py-4 rounded-2xl" />
-          <input name="empresa" placeholder="Nome da empresa" required className="w-full bg-black border border-yellow-400 px-5 py-4 rounded-2xl" />
-          <input name="email" type="email" placeholder="Email" required className="w-full bg-black border border-yellow-400 px-5 py-4 rounded-2xl" />
-          <input name="password" type="password" placeholder="Senha" required className="w-full bg-black border border-yellow-400 px-5 py-4 rounded-2xl" />
+        <form onSubmit={handleSubmit} className="space-y-8">
+          <input name="nome" placeholder="Seu nome completo" required className="w-full bg-black border border-amber-400 px-6 py-5 rounded-2xl text-white text-lg focus:border-blue-400 outline-none" />
+          <input name="empresa" placeholder="Nome da sua empresa" required className="w-full bg-black border border-amber-400 px-6 py-5 rounded-2xl text-white text-lg focus:border-blue-400 outline-none" />
+          <input name="email" type="email" placeholder="Seu email corporativo" required className="w-full bg-black border border-amber-400 px-6 py-5 rounded-2xl text-white text-lg focus:border-blue-400 outline-none" />
+          <input name="password" type="password" placeholder="Senha forte" required className="w-full bg-black border border-amber-400 px-6 py-5 rounded-2xl text-white text-lg focus:border-blue-400 outline-none" />
 
           {error && <p className="text-red-400 text-center">{error}</p>}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-yellow-400 to-blue-400 text-black font-bold py-4 rounded-2xl text-lg hover:scale-105 transition"
+            className="w-full py-6 text-xl font-bold bg-gradient-to-r from-amber-400 to-blue-400 text-black rounded-3xl hover:brightness-110 transition-all"
           >
-            {loading ? '⚡ Criando...' : 'CADASTRAR COM TROVÃO ⚡'}
+            {loading ? 'CRIANDO CONTA...' : 'CADASTRAR NA THUNDER AI'}
           </button>
         </form>
       </div>
