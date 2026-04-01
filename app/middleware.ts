@@ -1,4 +1,4 @@
-import { createServerClient } from '@supabase/ssr'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
@@ -14,11 +14,9 @@ export async function middleware(request: NextRequest) {
         getAll() {
           return request.cookies.getAll()
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
           cookiesToSet.forEach(({ name, value, options }) => {
-            // Atualiza o cookie na request
             request.cookies.set(name, value)
-            // Cria uma nova response com o cookie atualizado
             response = NextResponse.next({
               request,
             })
@@ -29,13 +27,13 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // Refresh da sessão (importante para manter o usuário logado)
+  // Refresh da sessão do usuário
   await supabase.auth.getSession()
 
   return response
 }
 
-// Aplica o middleware em todas as páginas, exceto login, cadastro e arquivos estáticos
+// Protege todas as páginas, menos login, cadastro e arquivos do Next.js
 export const config = {
   matcher: [
     '/((?!login|cadastro|api|_next/static|_next/image|favicon.ico).*)',
