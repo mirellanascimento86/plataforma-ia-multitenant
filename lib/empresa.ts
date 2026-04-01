@@ -1,3 +1,6 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
 
 export async function getEmpresaAtual() {
@@ -27,7 +30,6 @@ export async function getEmpresaAtual() {
 }
 
 export function useEmpresaAtual() {
-  // Hook simplificado para uso em client components
   const [empresa, setEmpresa] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   
@@ -40,6 +42,3 @@ export function useEmpresaAtual() {
   
   return { empresa, loading }
 }
-
-// Precisa importar useState e useEffect
-import { useState, useEffect } from 'react'
