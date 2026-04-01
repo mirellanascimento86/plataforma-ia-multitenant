@@ -1,42 +1,41 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(req: NextRequest) {
-  const res = NextResponse.next();
-  const supabase = createMiddlewareClient({ req, res });
+export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({
+    request,
+  })
 
-  const { data: { session } } = await supabase.auth.getSession();
-
-  // Rotas protegidas que precisam de empresa selecionada
-  const protectedRoutes = ['/dashboard', '/conversas', '/robos', '/clientes', '/agendamentos'];
-  const isProtected = protectedRoutes.some(route => req.nextUrl.pathname.startsWith(route));
-
-  if (isProtected && !session) {
-    return NextResponse.redirect(new URL('/login', req.url));
-  }
-
-  // Se estiver logado mas não tiver empresa selecionada, redireciona para seleção
-  if (session && isProtected) {
-    const { data: membro } = await supabase
-      .from('membros_empresa')
-      .select('empresa_id, cargo')
-      .eq('usuario_id', session.user.id)
-      .eq('ativo', true)
-      .single();
-
-    if (!membro) {
-      // Usuário sem empresa - redireciona para criar
-      return NextResponse.redirect(new URL('/criar-empresa', req.url));
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            request.cookies.set(name, value)
+            response = NextResponse.next({
+              request,
+            })
+            response.cookies.set(name, value, options)
+          })
+        },
+      },
     }
+  )
 
-    // Adiciona empresa_id ao header para uso nas APIs
-    res.headers.set('x-empresa-id', membro.empresa_id);
-  }
+  // Atualiza a sessão (refresh automático)
+  await supabase.auth.getSession()
 
-  return res;
+  return response
 }
 
+// Protege todas as rotas exceto login e cadastro
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
-};
+  matcher: [
+    '/((?!login|cadastro|api|_next/static|_next/image|favicon.ico).*)',
+  ],
+}
