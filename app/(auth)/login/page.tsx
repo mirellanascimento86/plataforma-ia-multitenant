@@ -1,96 +1,60 @@
 'use client'
 
 import { useState } from 'react'
+import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-const supabase = createClient(supabaseUrl, supabaseKey)
-
-export default function LoginPage() {
-  const router = useRouter()
-  const [email, setEmail] = useState('')
-  const [senha, setSenha] = useState('')
+export default function Login() {
   const [loading, setLoading] = useState(false)
-  const [erro, setErro] = useState('')
+  const [error, setError] = useState('')
+  const router = useRouter()
+  const supabase = createClient()
 
-  async function handleLogin(e: React.FormEvent) {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setLoading(true)
-    setErro('')
+    setError('')
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password: senha,
-    })
+    const formData = new FormData(e.currentTarget)
+    const email = formData.get('email') as string
+    const password = formData.get('password') as string
 
-    if (error) {
-      setErro('Email ou senha incorretos')
-      setLoading(false)
-      return
+    const { error: loginError } = await supabase.auth.signInWithPassword({ email, password })
+
+    if (loginError) {
+      setError(loginError.message)
+    } else {
+      document.documentElement.classList.add('thunder-shake')
+      setTimeout(() => router.push('/'), 800)
     }
-
-    router.push('/')
+    setLoading(false)
   }
 
   return (
-    <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
-      <div className="text-center mb-8">
-        <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <span className="text-2xl font-bold text-white">IA</span>
-        </div>
-        <h1 className="text-2xl font-bold text-gray-900">Bem-vindo de volta</h1>
-        <p className="text-gray-500 mt-2">Entre na sua conta</p>
+    <div className="max-w-md w-full bg-zinc-900 border border-yellow-400 rounded-3xl p-8 shadow-2xl">
+      <div className="flex items-center justify-center gap-2 mb-8">
+        <span className="text-5xl">⚡</span>
+        <h1 className="text-4xl font-bold tracking-tighter text-yellow-300">Thunder AI</h1>
       </div>
 
-      {erro && (
-        <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">
-          {erro}
-        </div>
-      )}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <input name="email" type="email" placeholder="Email" required className="w-full bg-black border border-yellow-400 text-white px-4 py-3 rounded-xl" />
+        <input name="password" type="password" placeholder="Senha" required className="w-full bg-black border border-yellow-400 text-white px-4 py-3 rounded-xl" />
 
-      <form onSubmit={handleLogin} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-            placeholder="seu@email.com"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
-          <input
-            type="password"
-            value={senha}
-            onChange={(e) => setSenha(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-            placeholder="••••••••"
-            required
-          />
-        </div>
+        {error && <p className="text-red-400 text-sm">{error}</p>}
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium"
+          className="w-full bg-gradient-to-r from-yellow-400 to-blue-400 text-black font-bold py-4 rounded-2xl hover:scale-105 transition-all"
         >
-          {loading ? 'Entrando...' : 'Entrar'}
+          {loading ? '⚡ Entrando...' : 'ENTRAR NO TROVÃO ⚡'}
         </button>
       </form>
 
-      <div className="mt-6 text-center text-sm text-gray-500">
-        Não tem conta?{' '}
-        <Link href="/cadastro" className="text-blue-600 hover:underline font-medium">
-          Criar conta
-        </Link>
-      </div>
+      <p className="text-center text-zinc-400 mt-6 text-sm">
+        Não tem conta? <a href="/cadastro" className="text-yellow-300">Cadastre-se</a>
+      </p>
     </div>
   )
 }
