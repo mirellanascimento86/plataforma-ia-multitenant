@@ -8,7 +8,7 @@ export default function CadastroPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const supabase = createClientComponentClient()
+  const supabase = createClient();
 
   const handleCadastro = async () => {
     setLoading(true)
