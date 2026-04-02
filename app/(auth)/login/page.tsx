@@ -43,8 +43,7 @@ export default function CadastroPage() {
       <div className="max-w-md w-full bg-zinc-900 p-10 rounded-3xl border border-white/10">
         <h1 className="text-4xl font-bold text-center mb-8">Criar conta</h1>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <input name="nome" placeholder="Nome completo" required className="w-full bg-black border border-white/20 p-4 rounded-2xl" />
-          <input name="empresa" placeholder="Nome da empresa" required className="w-full bg-black border border-white/20 p-4 rounded-2xl" />
+      
           <input name="email" type="email" placeholder="Email" required className="w-full bg-black border border-white/20 p-4 rounded-2xl" />
           <input name="password" type="password" placeholder="Senha" required className="w-full bg-black border border-white/20 p-4 rounded-2xl" />
 
