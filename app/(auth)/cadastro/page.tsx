@@ -1,60 +1,57 @@
-'use client';
-
-import { useState } from 'react';
-import { createClient } from '@/utils/supabase/client';
-import { useRouter } from 'next/navigation';
+'use client'
+import { useState } from 'react'
+import { createBrowserClient } from '@supabase/ssr'
+import { useRouter } from 'next/navigation'
 
 export default function CadastroPage() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const router = useRouter();
-  const supabase = createClient();
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const router = useRouter()
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
-    const formData = new FormData(e.currentTarget);
-    const nome = formData.get('nome') as string;
-    const empresa = formData.get('empresa') as string;
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
-
-    const { data, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { nome, empresa } }
-    });
-
-    if (authError) {
-      setError(authError.message);
-      setLoading(false);
-      return;
+  const handleCadastro = async () => {
+    setLoading(true)
+    const { error } = await supabase.auth.signUp({ email, password })
+    if (error) {
+      alert('Erro: ' + error.message)
+    } else {
+      alert('Cadastro realizado! Agora faça login.')
+      router.push('/auth/login')
     }
-
-    await supabase.from('usuarios').insert({ id: data.user!.id, nome, empresa });
-
-    router.push('/dashboard');
-  };
+    setLoading(false)
+  }
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-8">
-      <div className="max-w-md w-full bg-zinc-900 p-10 rounded-3xl border border-white/10">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="bg-white p-10 rounded-3xl w-full max-w-md shadow-xl">
         <h1 className="text-4xl font-bold text-center mb-8">Criar conta</h1>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <input name="nome" placeholder="Nome completo" required className="w-full bg-black border border-white/20 p-4 rounded-2xl" />
-          <input name="empresa" placeholder="Nome da empresa" required className="w-full bg-black border border-white/20 p-4 rounded-2xl" />
-          <input name="email" type="email" placeholder="Email" required className="w-full bg-black border border-white/20 p-4 rounded-2xl" />
-          <input name="password" type="password" placeholder="Senha" required className="w-full bg-black border border-white/20 p-4 rounded-2xl" />
-
-          {error && <p className="text-red-400 text-center">{error}</p>}
-
-          <button type="submit" disabled={loading} className="w-full py-5 bg-blue-600 rounded-3xl text-white font-bold">
-            {loading ? 'Criando...' : 'Criar conta'}
-          </button>
-        </form>
+        <input 
+          type="email" 
+          placeholder="Seu email" 
+          className="w-full p-4 border rounded-2xl mb-4" 
+          value={email} 
+          onChange={(e) => setEmail(e.target.value)} 
+        />
+        <input 
+          type="password" 
+          placeholder="Senha (mínimo 6 caracteres)" 
+          className="w-full p-4 border rounded-2xl mb-6" 
+          value={password} 
+          onChange={(e) => setPassword(e.target.value)} 
+        />
+        <button 
+          onClick={handleCadastro} 
+          disabled={loading}
+          className="w-full py-4 bg-indigo-600 text-white rounded-2xl text-lg hover:bg-indigo-700"
+        >
+          {loading ? 'Criando conta...' : 'Criar conta grátis'}
+        </button>
       </div>
     </div>
-  );
+  )
 }
