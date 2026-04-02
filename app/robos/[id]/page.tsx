@@ -1,53 +1,80 @@
-'use client'
-import { useParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
-import { createClientComponentClient } from '@supabase/ssr'
+'use client';
+import { useParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { createClient } from '@/utils/supabase/client';
 
 export default function RoboDetalhe() {
-  const { id } = useParams()
-  const [robo, setRobo] = useState<any>(null)
-  const supabase = createClientComponentClient()
+  const { id } = useParams() as { id: string };
+  const [prompt, setPrompt] = useState('');
+  const [whatsappToken, setWhatsappToken] = useState('');
+  const [phoneId, setPhoneId] = useState('');
+  const supabase = createClient();
 
   useEffect(() => {
-    supabase.from('robos').select('*').eq('id', id).single().then(({ data }) => setRobo(data))
-  }, [id])
+    carregarRobo();
+  }, [id]);
 
-  if (!robo) return <p>Carregando robô...</p>
+  async function carregarRobo() {
+    const { data } = await supabase.from('robos').select('*').eq('id', id).single();
+    if (data) {
+      setPrompt(data.prompt || '');
+      setWhatsappToken(data.whatsapp_token || '');
+      setPhoneId(data.whatsapp_phone_id || '');
+    }
+  }
+
+  async function salvarPrompt() {
+    const { error } = await supabase.from('robos').update({ prompt }).eq('id', id);
+    if (error) alert(error.message);
+    else alert('Prompt salvo com sucesso!');
+  }
+
+  async function salvarWhatsApp() {
+    const { error } = await supabase.from('robos').update({
+      whatsapp_token: whatsappToken,
+      whatsapp_phone_id: phoneId
+    }).eq('id', id);
+    if (error) alert(error.message);
+    else alert('Conexão WhatsApp salva! Configure o webhook no Meta Developers.');
+  }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <h1 className="text-4xl font-bold mb-2">{robo.nome}</h1>
-      <p className="text-gray-500 mb-10">{robo.descricao}</p>
+    <div className="p-10 max-w-5xl mx-auto">
+      <h1 className="text-4xl font-bold mb-10">Gerenciando Robô</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-8 rounded-3xl border">
-          <h3 className="font-semibold text-xl mb-6">Conectar WhatsApp</h3>
-          <button className="w-full py-6 bg-green-600 text-white rounded-2xl text-lg hover:bg-green-700">
-            📱 Conectar Número do WhatsApp
-          </button>
-          <p className="text-center text-sm text-gray-500 mt-4">100% grátis • Multi-device</p>
-        </div>
-
-        <div className="bg-white p-8 rounded-3xl border">
-          <h3 className="font-semibold text-xl mb-6">Treinar Robô</h3>
-          <button className="w-full py-6 bg-black text-white rounded-2xl text-lg hover:bg-gray-800">
-            Treinar com documentos / textos
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+        <div className="bg-zinc-900 p-8 rounded-3xl">
+          <h2 className="text-2xl font-bold mb-6">Treinar o Robô</h2>
+          <textarea 
+            value={prompt} 
+            onChange={(e) => setPrompt(e.target.value)}
+            className="w-full h-96 p-6 bg-black border border-white/20 rounded-3xl"
+            placeholder="Escreva aqui as instruções para o robô..."
+          />
+          <button onClick={salvarPrompt} className="mt-6 w-full py-5 bg-green-600 rounded-3xl text-white font-bold">
+            Salvar Prompt
           </button>
         </div>
 
-        <div className="bg-white p-8 rounded-3xl border">
-          <h3 className="font-semibold text-xl mb-6">Intervir nas Conversas</h3>
-          <button className="w-full py-6 border-2 border-indigo-600 text-indigo-600 rounded-2xl text-lg hover:bg-indigo-50">
-            Abrir Chat ao Vivo
+        <div className="bg-zinc-900 p-8 rounded-3xl">
+          <h2 className="text-2xl font-bold mb-6">Conectar WhatsApp</h2>
+          <input 
+            value={whatsappToken} 
+            onChange={(e) => setWhatsappToken(e.target.value)} 
+            placeholder="WhatsApp Access Token (Meta)" 
+            className="w-full p-6 bg-black border border-white/20 rounded-3xl mb-4"
+          />
+          <input 
+            value={phoneId} 
+            onChange={(e) => setPhoneId(e.target.value)} 
+            placeholder="Phone Number ID" 
+            className="w-full p-6 bg-black border border-white/20 rounded-3xl mb-6"
+          />
+          <button onClick={salvarWhatsApp} className="w-full py-5 bg-blue-600 rounded-3xl text-white font-bold">
+            Salvar Conexão WhatsApp
           </button>
-        </div>
-
-        <div className="bg-white p-8 rounded-3xl border">
-          <h3 className="font-semibold text-xl mb-6">Desempenho</h3>
-          <p className="text-5xl font-bold text-green-600">98%</p>
-          <p className="text-gray-500">Taxa de resolução</p>
         </div>
       </div>
     </div>
-  )
+  );
 }

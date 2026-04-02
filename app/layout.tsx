@@ -10,7 +10,7 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Thunder AI',
-  description: 'Agentes de IA para WhatsApp',
+  description: 'Plataforma de Agentes IA para WhatsApp',
 }
 
 export default async function RootLayout({
@@ -28,12 +28,8 @@ export default async function RootLayout({
         getAll() { return cookieStore.getAll() },
         setAll(cookiesToSet) {
           try {
-            cookiesToSet.forEach(({ name, value, options }) => 
-              cookieStore.set(name, value, options)
-            )
-          } catch {
-            // Ignora erro em ambiente de servidor
-          }
+            cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
+          } catch {}
         },
       },
     }
@@ -45,9 +41,9 @@ export default async function RootLayout({
     <html lang="pt-BR">
       <body className={inter.className}>
         {session ? (
-          <div className="flex h-screen bg-gray-50">
+          <div className="flex h-screen overflow-hidden bg-gray-50">
             <Sidebar />
-            <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 flex flex-col">
               <Topbar />
               <main className="flex-1 overflow-auto p-8">{children}</main>
             </div>
