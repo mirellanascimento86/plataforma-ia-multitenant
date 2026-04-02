@@ -1,59 +1,56 @@
-'use client';
+'use client'
+import { useState } from 'react'
+import { createBrowserClient } from '@supabase/ssr'
+import { useRouter } from 'next/navigation'
 
-import { useState } from 'react';
-import { createClient } from '@/utils/supabase/client';
-import { useRouter } from 'next/navigation';
+export default function LoginPage() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const router = useRouter()
 
-export default function CadastroPage() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const router = useRouter();
-  const supabase = createClient();
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    const formData = new FormData(e.currentTarget);
-    const nome = formData.get('nome') as string;
-    const empresa = formData.get('empresa') as string;
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
-
-    const { data, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { nome, empresa } }
-    });
-
-    if (authError) {
-      setError(authError.message);
-      setLoading(false);
-      return;
+  const handleLogin = async () => {
+    setLoading(true)
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) {
+      alert('Erro: ' + error.message)
+    } else {
+      router.push('/dashboard')
     }
-
-    await supabase.from('usuarios').insert({ id: data.user!.id, nome, empresa });
-
-    router.push('/dashboard');
-  };
+    setLoading(false)
+  }
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-8">
-      <div className="max-w-md w-full bg-zinc-900 p-10 rounded-3xl border border-white/10">
-        <h1 className="text-4xl font-bold text-center mb-8">Criar conta</h1>
-        <form onSubmit={handleSubmit} className="space-y-6">
-      
-          <input name="email" type="email" placeholder="Email" required className="w-full bg-black border border-white/20 p-4 rounded-2xl" />
-          <input name="password" type="password" placeholder="Senha" required className="w-full bg-black border border-white/20 p-4 rounded-2xl" />
-
-          {error && <p className="text-red-400 text-center">{error}</p>}
-
-          <button type="submit" disabled={loading} className="w-full py-5 bg-blue-600 rounded-3xl text-white font-bold">
-            {loading ? 'Entrando...' : 'Fazer Login'}
-          </button>
-        </form>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="bg-white p-10 rounded-3xl w-full max-w-md shadow-xl">
+        <h1 className="text-4xl font-bold text-center mb-8">Entrar</h1>
+        <input 
+          type="email" 
+          placeholder="Seu email" 
+          className="w-full p-4 border rounded-2xl mb-4" 
+          value={email} 
+          onChange={(e) => setEmail(e.target.value)} 
+        />
+        <input 
+          type="password" 
+          placeholder="Senha" 
+          className="w-full p-4 border rounded-2xl mb-6" 
+          value={password} 
+          onChange={(e) => setPassword(e.target.value)} 
+        />
+        <button 
+          onClick={handleLogin} 
+          disabled={loading}
+          className="w-full py-4 bg-indigo-600 text-white rounded-2xl text-lg hover:bg-indigo-700"
+        >
+          {loading ? 'Entrando...' : 'Entrar'}
+        </button>
       </div>
     </div>
-  );
+  )
 }
