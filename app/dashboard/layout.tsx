@@ -1,4 +1,4 @@
-import { createServerClient } from '@supabase/ssr'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 
@@ -14,8 +14,10 @@ export default async function DashboardLayout({
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() { return cookieStore.getAll() },
-        setAll(cookiesToSet) {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
           try {
             cookiesToSet.forEach(({ name, value, options }) => 
               cookieStore.set(name, value, options)
@@ -28,8 +30,9 @@ export default async function DashboardLayout({
 
   const { data: { session } } = await supabase.auth.getSession()
 
+  // Se não estiver logado, redireciona para login
   if (!session) {
-    redirect('/auth/login')
+    redirect('/login')
   }
 
   return <>{children}</>
