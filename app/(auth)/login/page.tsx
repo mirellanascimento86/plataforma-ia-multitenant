@@ -27,7 +27,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="bg-white p-10 rounded-3xl w-full max-w-md">
+      <div className="bg-white p-10 rounded-3xl w-full max-w-md shadow-xl">
         <h1 className="text-4xl font-bold text-center mb-8">Entrar</h1>
         <input type="email" placeholder="Email" className="w-full p-4 border rounded-2xl mb-4" value={email} onChange={e => setEmail(e.target.value)} />
         <input type="password" placeholder="Senha" className="w-full p-4 border rounded-2xl mb-8" value={password} onChange={e => setPassword(e.target.value)} />
