@@ -1,66 +1,42 @@
-'use client'
-import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import { createBrowserClient } from '@supabase/ssr'
-import { Plus, Bot } from 'lucide-react'
+'use client';
+
+import { useEffect } from 'react';
 
 export default function Dashboard() {
-  const [robos, setRobos] = useState<any[]>([])
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-
   useEffect(() => {
-    supabase
-      .from('robos')
-      .select('*')
-      .then(({ data }) => setRobos(data || []))
-  }, [supabase])
+    // Flash sutil de raio só uma vez
+    const flash = document.getElementById('flash');
+    if (flash) flash.style.opacity = '1';
+  }, []);
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-10">
-        <div>
-          <h1 className="text-4xl font-bold text-gray-900">Bem-vindo ao seu Workspace</h1>
-          <p className="text-gray-600 mt-2">Crie e gerencie seus agentes de IA para WhatsApp</p>
-        </div>
-        <Link 
-          href="/robos" 
-          className="flex items-center gap-3 bg-indigo-600 text-white px-8 py-4 rounded-3xl text-lg hover:bg-indigo-700 transition"
-        >
-          <Plus size={24} /> Criar Novo Robô
-        </Link>
+    <div className="flex min-h-screen bg-[#0a0a0a]">
+      {/* MENU MINIMALISTA */}
+      <div className="w-64 bg-zinc-900 border-r border-white/10 p-6 flex flex-col">
+        <div className="text-3xl font-black mb-12 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">Thunder AI</div>
+        
+        <nav className="flex-1 space-y-2">
+          <a href="/conversas" className="block px-6 py-4 hover:bg-white/10 rounded-2xl text-lg font-medium transition">Conversas</a>
+          <a href="/robos" className="block px-6 py-4 hover:bg-white/10 rounded-2xl text-lg font-medium transition">Meus Robôs</a>
+          <a href="/whatsapp" className="block px-6 py-4 hover:bg-white/10 rounded-2xl text-lg font-medium transition">Conectar WhatsApp</a>
+          <a href="/agendamentos" className="block px-6 py-4 hover:bg-white/10 rounded-2xl text-lg font-medium transition">Calendário</a>
+          <a href="/clientes" className="block px-6 py-4 hover:bg-white/10 rounded-2xl text-lg font-medium transition">Clientes</a>
+          <a href="/planilhas" className="block px-6 py-4 hover:bg-white/10 rounded-2xl text-lg font-medium transition">Planilhas</a>
+          <a href="/desempenho" className="block px-6 py-4 hover:bg-white/10 rounded-2xl text-lg font-medium transition">Desempenho & Gráficos</a>
+        </nav>
       </div>
 
-      {robos.length === 0 ? (
-        <div className="text-center py-20 border-2 border-dashed border-gray-300 rounded-3xl bg-white">
-          <Bot size={80} className="mx-auto text-gray-300 mb-6" />
-          <h3 className="text-2xl font-medium text-gray-400 mb-4">Você ainda não tem nenhum robô criado</h3>
-          <Link 
-            href="/robos" 
-            className="inline-block bg-black text-white px-10 py-5 rounded-3xl text-lg hover:bg-gray-800"
-          >
-            Criar meu primeiro robô agora →
-          </Link>
+      {/* CONTEÚDO */}
+      <div className="flex-1 p-10">
+        <h1 className="text-5xl font-black">Bem-vindo à Thunder AI Corporation</h1>
+        <p className="text-xl text-gray-400 mt-4">Seu robô já está pronto para trabalhar 24h.</p>
+        
+        <div className="mt-12 grid grid-cols-3 gap-6">
+          <div className="bg-zinc-900 p-8 rounded-3xl border border-white/10">Criar novo robô</div>
+          <div className="bg-zinc-900 p-8 rounded-3xl border border-white/10">Ver conversas ativas</div>
+          <div className="bg-zinc-900 p-8 rounded-3xl border border-white/10">Conectar WhatsApp</div>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {robos.map((robo) => (
-            <Link 
-              key={robo.id} 
-              href={`/robos/${robo.id}`}
-              className="bg-white p-8 rounded-3xl border hover:shadow-xl hover:-translate-y-1 transition-all"
-            >
-              <h3 className="text-2xl font-semibold">{robo.nome}</h3>
-              <p className="text-gray-500 mt-1">{robo.descricao || 'Sem descrição'}</p>
-              {robo.whatsapp_numero && (
-                <p className="text-green-600 text-sm mt-4">📱 Conectado ao WhatsApp</p>
-              )}
-            </Link>
-          ))}
-        </div>
-      )}
+      </div>
     </div>
-  )
+  );
 }
