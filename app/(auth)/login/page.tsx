@@ -48,7 +48,7 @@ export default function Cadastro() {
           {error && <p className="text-red-400 text-center">{error}</p>}
 
           <button type="submit" disabled={loading} className="w-full py-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-3xl text-xl">
-            {loading ? 'CRIANDO...' : 'Criar conta'}
+            {loading ? 'ENTRANDO...' : 'ENTRAR'}
           </button>
         </form>
       </div>
