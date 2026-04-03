@@ -16,16 +16,19 @@ export default function Login() {
 
   const handleLogin = async () => {
     setLoading(true)
+    
     const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password
+      email: email.trim(),
+      password: password
     })
 
     if (error) {
       alert('Erro ao fazer login: ' + error.message)
     } else {
       router.push('/dashboard')
+      router.refresh()
     }
+    
     setLoading(false)
   }
 
@@ -53,9 +56,9 @@ export default function Login() {
         <button 
           onClick={handleLogin} 
           disabled={loading}
-          className="w-full py-5 bg-indigo-600 text-white rounded-2xl text-xl font-medium"
+          className="w-full py-5 bg-indigo-600 text-white rounded-2xl text-xl font-medium hover:bg-indigo-700"
         >
-          {loading ? 'Entrando...' : 'Entrar'}
+          {loading ? 'Entrando...' : 'Entrar na Plataforma'}
         </button>
       </div>
     </div>
