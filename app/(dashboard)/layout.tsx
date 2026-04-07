@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { LayoutDashboard, MessageSquare, Bot, LogOut } from 'lucide-react'
+import { LayoutDashboard, MessageSquare, Bot, LogOut, Calendar, Users, FileSpreadsheet, Phone } from 'lucide-react'
 
 
 const menuItems = [
