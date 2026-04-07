@@ -5,8 +5,8 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Plataforma IA - Atendimento Inteligente',
-  description: 'Plataforma multi-tenant de atendimento com IA',
+  title: 'Agente IA Pro - Atendimento Automatizado',
+  description: 'Plataforma de atendimento com IA para WhatsApp Business',
 }
 
 export default function RootLayout({
