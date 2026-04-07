@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
-import { Bot, Eye, EyeOff, ArrowRight, CheckCircle2 } from 'lucide-react'
+import { Bot, Eye, EyeOff, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react'
 
 export default function CadastroPage() {
   const [formData, setFormData] = useState({
@@ -17,7 +17,7 @@ export default function CadastroPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [step, setStep] = useState(1)
+  const [success, setSuccess] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -39,7 +39,6 @@ export default function CadastroPage() {
     }
 
     try {
-      // 1. Criar usuário no Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -54,31 +53,16 @@ export default function CadastroPage() {
       if (authError) throw authError
 
       if (authData.user) {
-        // 2. Criar registro na tabela users (se existir)
-        const { error: dbError } = await supabase
-          .from('users')
-          .insert({
-            id: authData.user.id,
-            email: formData.email,
-            full_name: formData.nome,
-            company: formData.empresa,
-            created_at: new Date().toISOString()
-          })
-
-        if (dbError && dbError.code !== '23505') { // Ignora erro de duplicado
-          console.error('Erro ao criar usuário na tabela:', dbError)
-        }
-
-        setStep(2) // Mostra tela de sucesso
+        setSuccess(true)
       }
     } catch (err: any) {
-      setError(err.message || 'Erro ao criar conta')
+      setError(err.message || 'Erro ao criar conta. Tente novamente.')
     } finally {
       setLoading(false)
     }
   }
 
-  if (step === 2) {
+  if (success) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4">
         <div className="max-w-md w-full text-center">
@@ -91,22 +75,14 @@ export default function CadastroPage() {
             </h1>
             <p className="text-gray-600 mb-6">
               Enviamos um e-mail de confirmação para <strong>{formData.email}</strong>. 
-              Verifique sua caixa de entrada e confirme seu e-mail para começar.
+              Verifique sua caixa de entrada.
             </p>
-            <div className="space-y-3">
-              <Link 
-                href="/login"
-                className="block w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
-              >
-                Ir para Login
-              </Link>
-              <button 
-                onClick={() => setStep(1)}
-                className="block w-full text-gray-600 hover:text-gray-800"
-              >
-                Usar outro e-mail
-              </button>
-            </div>
+            <Link 
+              href="/login"
+              className="block w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
+            >
+              Ir para Login
+            </Link>
           </div>
         </div>
       </div>
@@ -116,7 +92,6 @@ export default function CadastroPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full">
-        {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center space-x-2">
             <Bot className="w-10 h-10 text-blue-600" />
@@ -133,58 +108,51 @@ export default function CadastroPage() {
           </p>
 
           {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm">
+            <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm flex items-center">
+              <AlertCircle className="w-4 h-4 mr-2" />
               {error}
             </div>
           )}
 
           <form onSubmit={handleCadastro} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nome completo
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Nome completo</label>
               <input
                 type="text"
                 value={formData.nome}
                 onChange={(e) => setFormData({...formData, nome: e.target.value})}
                 required
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 placeholder="João Silva"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                E-mail
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
               <input
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({...formData, email: e.target.value})}
                 required
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 placeholder="joao@empresa.com"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nome da empresa
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Nome da empresa</label>
               <input
                 type="text"
                 value={formData.empresa}
                 onChange={(e) => setFormData({...formData, empresa: e.target.value})}
                 required
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 placeholder="Minha Empresa"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Senha
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -192,7 +160,7 @@ export default function CadastroPage() {
                   onChange={(e) => setFormData({...formData, password: e.target.value})}
                   required
                   minLength={6}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   placeholder="Mínimo 6 caracteres"
                 />
                 <button
@@ -206,15 +174,13 @@ export default function CadastroPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Confirmar senha
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Confirmar senha</label>
               <input
                 type="password"
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
                 required
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 placeholder="Digite a senha novamente"
               />
             </div>
@@ -223,25 +189,18 @@ export default function CadastroPage() {
               <input type="checkbox" required className="mt-1 mr-2 rounded border-gray-300" />
               <span className="text-gray-600">
                 Concordo com os{' '}
-                <Link href="/termos" className="text-blue-600 hover:text-blue-700">Termos de Uso</Link>
+                <Link href="/termos" className="text-blue-600 hover:text-blue-700">Termos</Link>
                 {' '}e{' '}
-                <Link href="/politicas" className="text-blue-600 hover:text-blue-700">Políticas de Privacidade</Link>
+                <Link href="/politicas" className="text-blue-600 hover:text-blue-700">Privacidade</Link>
               </span>
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center space-x-2"
+              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center space-x-2"
             >
-              {loading ? (
-                <span>Criando conta...</span>
-              ) : (
-                <>
-                  <span>Criar Conta Grátis</span>
-                  <ArrowRight className="w-5 h-5" />
-                </>
-              )}
+              {loading ? 'Criando...' : <><span>Criar Conta</span><ArrowRight className="w-5 h-5" /></>}
             </button>
           </form>
 
@@ -257,7 +216,7 @@ export default function CadastroPage() {
 
         <div className="mt-8 text-center">
           <Link href="/" className="text-gray-500 hover:text-gray-700 text-sm">
-            ← Voltar para página inicial
+            ← Voltar para home
           </Link>
         </div>
       </div>
