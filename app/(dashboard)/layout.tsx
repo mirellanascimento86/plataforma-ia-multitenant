@@ -6,11 +6,6 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { LayoutDashboard, MessageSquare, Bot, LogOut } from 'lucide-react'
 
-const menuItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/conversas', label: 'Conversas', icon: MessageSquare },
-  { href: '/robos', label: 'Meus Robôs', icon: Bot },
-]
 
 const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
