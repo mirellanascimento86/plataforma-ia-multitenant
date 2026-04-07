@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
-import { Bot, Eye, EyeOff, ArrowRight } from 'lucide-react'
+import { Bot, Eye, EyeOff, ArrowRight, AlertCircle } from 'lucide-react'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -29,11 +29,11 @@ export default function LoginPage() {
       if (error) throw error
 
       if (data.user) {
-        router.push('/dashboard')
+        router.push('/agent')
         router.refresh()
       }
     } catch (err: any) {
-      setError(err.message || 'Erro ao fazer login')
+      setError(err.message || 'Erro ao fazer login. Verifique suas credenciais.')
     } finally {
       setLoading(false)
     }
@@ -42,7 +42,6 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full">
-        {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center space-x-2">
             <Bot className="w-10 h-10 text-blue-600" />
@@ -59,7 +58,8 @@ export default function LoginPage() {
           </p>
 
           {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm">
+            <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm flex items-center">
+              <AlertCircle className="w-4 h-4 mr-2" />
               {error}
             </div>
           )}
